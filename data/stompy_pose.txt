@@ -1,0 +1,81 @@
+Standing:
+stompy_default_pos = {
+    "joint_head_1_x4_1_dof_x4": -0.9425,
+    "joint_legs_1_x8_1_dof_x8": -0.5061454830783556,
+    "joint_legs_1_x8_2_dof_x8": 0.5061454830783556,
+    "joint_legs_1_left_leg_1_x8_1_dof_x8": -0.5061454830783556,
+    "joint_legs_1_left_leg_1_x10_1_dof_x10": 0.9773843811168246,
+    "joint_legs_1_right_leg_1_x8_1_dof_x8": -0.5061454830783556,
+    "joint_legs_1_right_leg_1_x10_2_dof_x10": -0.9773843811168246,
+    "joint_legs_1_left_leg_1_knee_revolute": -0.10471975511965978,
+    "joint_legs_1_right_leg_1_knee_revolute": 0.10471975511965978,
+    "joint_legs_1_left_leg_1_ankle_revolute": 0.0,
+    "joint_legs_1_right_leg_1_ankle_revolute": 0.0,
+    "joint_legs_1_left_leg_1_x4_1_dof_x4": 0.0,
+    "joint_legs_1_right_leg_1_x4_1_dof_x4": 0.0,
+    # left arm
+    "joint_left_arm_2_x8_1_dof_x8": -1.5708, # 90
+    "joint_left_arm_2_x8_2_dof_x8": -0.4363, # 25
+    "joint_left_arm_2_x6_1_dof_x6": -0.5236, # 30
+    "joint_left_arm_2_x6_2_dof_x6": -1.5708, 
+    "joint_left_arm_2_x4_1_dof_x4": -0.,
+    "joint_left_arm_2_hand_1_x4_1_dof_x4": -0.8727,
+    # right arm
+    "joint_right_arm_1_x8_1_dof_x8": 1.5708, 
+    "joint_right_arm_1_x8_2_dof_x8": 0.4363, 
+    "joint_right_arm_1_x6_1_dof_x6": 0.5236, 
+    "joint_right_arm_1_x6_2_dof_x6": 1.5708, 
+    "joint_right_arm_1_x4_1_dof_x4": 0., 
+    "joint_right_arm_1_hand_1_x4_1_dof_x4": -0.8727, 
+}
+
+
+Sitting 1:
+"joint_head_1_x4_1_dof_x4": -0.9425,
+# legs
+joint_legs_1_left_leg_1_x10_1_dof_x10: 0.2793 # 16 deg
+joint_legs_1_left_leg_1_ankle_revolute: 0.6981 # 40 deg
+joint_legs_1_left_leg_1_knee_revolute: -1.501 # -86
+joint_legs_1_right_leg_1_ankle_revolute: -0.6981 # -40
+joint_legs_1_right_leg_1_knee_revolute: 1.501 # 86
+joint_legs_1_right_leg_1_x10_2_dof_x10: -0.2793 #-16
+# left arm
+"joint_left_arm_2_x8_1_dof_x8": -1.5708, # 90
+"joint_left_arm_2_x8_2_dof_x8": -0.4363, # 25
+"joint_left_arm_2_x6_1_dof_x6": -0.5236, # 30
+"joint_left_arm_2_x6_2_dof_x6": -1.5708, 
+"joint_left_arm_2_x4_1_dof_x4": -0.,
+"joint_left_arm_2_hand_1_x4_1_dof_x4": -0.8727,
+# right arm
+"joint_right_arm_1_x8_1_dof_x8": 1.5708, 
+"joint_right_arm_1_x8_2_dof_x8": 0.4363, 
+"joint_right_arm_1_x6_1_dof_x6": 0.5236, 
+"joint_right_arm_1_x6_2_dof_x6": 1.5708, 
+"joint_right_arm_1_x4_1_dof_x4": 0., 
+"joint_right_arm_1_hand_1_x4_1_dof_x4": -0.8727, 
+
+
+Sitting 2:
+
+# legs
+joint_legs_1_left_leg_1_x10_1_dof_x10: 0.6283 # 36 deg
+joint_legs_1_left_leg_1_ankle_revolute: 0.3491 #20 deg
+joint_legs_1_left_leg_1_knee_revolute: -0.8029 #-46
+joint_legs_1_right_leg_1_ankle_revolute: -0.3491 # -20
+joint_legs_1_right_leg_1_knee_revolute: 0.8029 # 46
+joint_legs_1_right_leg_1_x10_2_dof_x10: -0.6283 #-36
+
+# left arm
+"joint_left_arm_2_x8_1_dof_x8": -1.5708, # 90
+"joint_left_arm_2_x8_2_dof_x8": -0.4363, # 25
+"joint_left_arm_2_x6_1_dof_x6": -0.5236, # 30
+"joint_left_arm_2_x6_2_dof_x6": -1.5708, 
+"joint_left_arm_2_x4_1_dof_x4": -0.,
+"joint_left_arm_2_hand_1_x4_1_dof_x4": -0.8727,
+# right arm
+"joint_right_arm_1_x8_1_dof_x8": 1.5708, 
+"joint_right_arm_1_x8_2_dof_x8": 0.4363, 
+"joint_right_arm_1_x6_1_dof_x6": 0.5236, 
+"joint_right_arm_1_x6_2_dof_x6": 1.5708, 
+"joint_right_arm_1_x4_1_dof_x4": 0., 
+"joint_right_arm_1_hand_1_x4_1_dof_x4": -0.8727, 

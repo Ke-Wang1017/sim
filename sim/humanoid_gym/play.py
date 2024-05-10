@@ -16,7 +16,7 @@ from sim.humanoid_gym.envs import *  # noqa: F403
 def play(args: argparse.Namespace) -> None:
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
     # override some parameters for testing
-    env_cfg.env.num_envs = min(env_cfg.env.num_envs, 1)
+    env_cfg.env.num_envs = min(env_cfg.env.num_envs, 10)
     env_cfg.sim.max_gpu_contact_pairs = 2**10
     # env_cfg.terrain.mesh_type = 'trimesh'
     env_cfg.terrain.mesh_type = "plane"
@@ -88,7 +88,7 @@ def play(args: argparse.Namespace) -> None:
             env.commands[:, 3] = 0.0
 
         obs, critic_obs, rews, dones, infos = env.step(actions.detach())
-
+        # print("base orientation euler:", env.base_euler_xyz[robot_index, :2])
         if RENDER:
             env.gym.fetch_results(env.sim, True)
             env.gym.step_graphics(env.sim)

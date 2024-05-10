@@ -69,15 +69,29 @@ class GetupFreeEnv(LeggedRobot):
         actor_handle = self.actor_handles[0]
 
         self.ref_dof_pos = torch.zeros_like(self.dof_pos)
+        self.target_choice = torch.randint(0, 3, (self.num_envs,), device=self.device)
+
         for joint in Stompy.all_joints():
             joint_handle = self.gym.find_actor_dof_handle(env_handle, actor_handle, joint)
-            if joint in Stompy.default_sitting():
-                self.ref_dof_pos[:, joint_handle] = torch.tensor(Stompy.default_sitting()[joint])
+            if joint in Stompy.default_standing():
+                for env_id in range(self.num_envs):
+                    self.ref_dof_pos[env_id, joint_handle] = torch.tensor(Stompy.default_sitting1()[joint])
+
+                    # if self.target_choice[env_id] == 0:
+                    #     self.ref_dof_pos[env_id, joint_handle] = torch.tensor(Stompy.default_kneeling()[joint])
+                    # elif self.target_choice[env_id] == 1:
+                    #     self.ref_dof_pos[env_id, joint_handle] = torch.tensor(Stompy.default_sitting1()[joint])
+                    # elif self.target_choice[env_id] == 2:
+                    #     self.ref_dof_pos[env_id, joint_handle] = torch.tensor(Stompy.default_sitting2()[joint])
 
         self.compute_observations()
 
         self.height_history = torch.zeros((self.num_envs, int(self.max_episode_length.item())), device=self.device)
         self.window_size = int(self.max_episode_length.item() * 0.2)
+    
+    def _init_buffers(self):
+        super()._init_buffers()
+        self.target_choice = torch.randint(0, 3, (self.num_envs,), device=self.device)
 
     def _push_robots(self):
         """Random pushes the robots. Emulates an impulse by setting a randomized base velocity."""
@@ -159,6 +173,38 @@ class GetupFreeEnv(LeggedRobot):
         actions += self.cfg.domain_rand.dynamic_randomization * torch.randn_like(actions) * actions
         return super().step(actions)
 
+    def _resample_commands(self, env_ids):
+        """ Randommly select commands of some environments
+
+        Args:
+            env_ids (List[int]): Environments ids for which new commands are needed
+        """
+        env_handle = self.envs[0]
+        actor_handle = self.actor_handles[0]
+        self.target_choice[env_ids] = torch.randint(0, 3, (len(env_ids),), device=self.device)
+        for joint in Stompy.all_joints():
+            joint_handle = self.gym.find_actor_dof_handle(env_handle, actor_handle, joint)
+        if joint in Stompy.default_standing():
+            self.ref_dof_pos[env_ids, joint_handle] = torch.tensor(Stompy.default_sitting1()[joint])
+
+            # for env_id in env_ids:
+            #     if self.target_choice[env_id] == 0:
+            #         self.ref_dof_pos[env_id, joint_handle] = torch.tensor(Stompy.default_kneeling()[joint])
+            #     elif self.target_choice[env_id] == 1:
+            #         self.ref_dof_pos[env_id, joint_handle] = torch.tensor(Stompy.default_sitting1()[joint])
+            #     elif self.target_choice[env_id] == 2:
+            #         self.ref_dof_pos[env_id, joint_handle] = torch.tensor(Stompy.default_sitting2()[joint])
+
+        # self.commands[env_ids, 0] = torch_rand_float(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], (len(env_ids), 1), device=self.device).squeeze(1)
+        # self.commands[env_ids, 1] = torch_rand_float(self.command_ranges["lin_vel_y"][0], self.command_ranges["lin_vel_y"][1], (len(env_ids), 1), device=self.device).squeeze(1)
+        # if self.cfg.commands.heading_command:
+        #     self.commands[env_ids, 3] = torch_rand_float(self.command_ranges["heading"][0], self.command_ranges["heading"][1], (len(env_ids), 1), device=self.device).squeeze(1)
+        # else:
+        #     self.commands[env_ids, 2] = torch_rand_float(self.command_ranges["ang_vel_yaw"][0], self.command_ranges["ang_vel_yaw"][1], (len(env_ids), 1), device=self.device).squeeze(1)
+
+        # # set small commands to zero
+        # self.commands[env_ids, :2] *= (torch.norm(self.commands[env_ids, :2], dim=1) > 0.2).unsqueeze(1)
+
     def compute_observations(self):
         self.command_input = torch.zeros([self.num_envs, 5], device=self.device)
 
@@ -167,7 +213,8 @@ class GetupFreeEnv(LeggedRobot):
 
         self.privileged_obs_buf = torch.cat(
             (
-                self.command_input,  # 2 + 3
+                # self.command_input,  # 2 + 3
+                self.ref_dof_pos,
                 (self.dof_pos - self.default_joint_pd_target) * self.obs_scales.dof_pos,  # 12
                 self.dof_vel * self.obs_scales.dof_vel,  # 12
                 self.actions,  # 12
@@ -187,7 +234,8 @@ class GetupFreeEnv(LeggedRobot):
 
         obs_buf = torch.cat(
             (
-                self.command_input,  # 5 = 2D(sin cos) + 3D(vel_x, vel_y, aug_vel_yaw)
+                # self.command_input,  # 5 = 2D(sin cos) + 3D(vel_x, vel_y, aug_vel_yaw)
+                self.ref_dof_pos,
                 q,  # 12D
                 dq,  # 12D
                 self.actions,  # 12D
@@ -236,14 +284,33 @@ class GetupFreeEnv(LeggedRobot):
         r = torch.exp(-2 * torch.norm(diff, dim=1)) - 0.2 * torch.norm(diff, dim=1)
         return r
 
+    # def _reward_orientation(self):
+    #     """Calculates the reward for maintaining a flat base orientation. It penalizes deviation
+    #     from the desired base orientation using the base euler angles and the projected gravity vector.
+    #     """
+    #     ori_straight_idx = (self.target_choice != 0).nonzero().squeeze()
+    #     ori_flat_idx = (self.target_choice == 0).nonzero().squeeze()
+    #     quat_mismatch = torch.zeros(self.num_envs, device=self.device)
+    #     ref_euler = torch.tensor(self.cfg.rewards.base_target_orientation_euler).to(self.device)
+    #     if ori_flat_idx.numel() > 0:
+    #         quat_mismatch[ori_flat_idx] = torch.exp(-torch.sum(torch.abs(ref_euler[:2]-self.base_euler_xyz[ori_flat_idx, :2]), dim=1) * 10)
+    #     if ori_straight_idx.numel() > 0:
+    #         quat_mismatch[ori_straight_idx] = torch.exp(-torch.sum(torch.abs(-self.base_euler_xyz[ori_straight_idx, :2]), dim=1) * 10)
+
+    #     orientation = torch.exp(-torch.norm(self.projected_gravity[:, :2], dim=1) * 20)
+
+    #     return (quat_mismatch) / 2.0
+
     def _reward_orientation(self):
         """Calculates the reward for maintaining a flat base orientation. It penalizes deviation
         from the desired base orientation using the base euler angles and the projected gravity vector.
         """
-        quat_mismatch = torch.exp(-torch.sum(torch.abs(self.base_euler_xyz[:, :2]), dim=1) * 10)
+        quat_mismatch = torch.zeros(self.num_envs, device=self.device)
+        quat_mismatch = torch.exp(-torch.sum(torch.abs(-self.base_euler_xyz[:, :2]), dim=1) * 10)
+
         orientation = torch.exp(-torch.norm(self.projected_gravity[:, :2], dim=1) * 20)
 
-        return (quat_mismatch + orientation) / 2.0
+        return (quat_mismatch+orientation) / 2.0
 
     def _reward_default_joint_pos(self):
         """Calculates the reward for keeping joint positions close to default positions, with a focus
@@ -277,15 +344,26 @@ class GetupFreeEnv(LeggedRobot):
         self.time_out_buf = self.episode_length_buf > self.max_episode_length  # no terminal reward for time-outs
         self.reset_buf = self.time_out_buf
 
+    # def _reward_base_height(self):
+    #     """Calculates the reward based on the robot's base height. Penalizes deviation from a target base height.
+    #     The reward is computed based on the height difference between the robot's base and the average height
+    #     of its feet when they are in contact with the ground.
+    #     """
+    #     base_height = torch.zeros(self.num_envs).to(self.device)
+    #     height_idx = (self.target_choice != 0).nonzero().squeeze()
+    #     base_height[height_idx] = torch.exp(-torch.abs(self.cfg.rewards.base_height_target - self.root_states[height_idx, 2]) * 3)
+
+    #     return base_height
+
     def _reward_base_height(self):
         """Calculates the reward based on the robot's base height. Penalizes deviation from a target base height.
         The reward is computed based on the height difference between the robot's base and the average height
         of its feet when they are in contact with the ground.
         """
-        base_height = self.root_states[:, 2] - default_feet_height
+        base_height = torch.exp(-torch.abs(self.cfg.rewards.base_height_target - self.root_states[:, 2]) * 3)
 
         return base_height
-
+    
     def _reward_base_acc(self):
         """Computes the reward based on the base's acceleration. Penalizes high accelerations of the robot's base,
         encouraging smoother motion.

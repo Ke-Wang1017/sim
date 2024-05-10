@@ -20,13 +20,15 @@ class GetupCfg(LeggedRobotCfg):
         # change the observation dim
         frame_stack = 15
         c_frame_stack = 3
-        num_single_obs = 11 + NUM_JOINTS * 3
+        # num_single_obs = 11 + NUM_JOINTS * 3
+        num_single_obs = 6 + NUM_JOINTS * 4
         num_observations = int(frame_stack * num_single_obs)
-        single_num_privileged_obs = 25 + NUM_JOINTS * 4
+        # single_num_privileged_obs = 25 + NUM_JOINTS * 4
+        single_num_privileged_obs = 20 + NUM_JOINTS * 5
         num_privileged_obs = int(c_frame_stack * single_num_privileged_obs)
         num_actions = NUM_JOINTS
         num_envs = 4096
-        episode_length_s = 10  # episode length in seconds
+        episode_length_s = 2.  # episode length in seconds
         use_ref_actions = False
 
     class safety:  # noqa: N801
@@ -78,7 +80,7 @@ class GetupCfg(LeggedRobotCfg):
             height_measurements = 0.1
 
     class init_state(LeggedRobotCfg.init_state):  # noqa: N801
-        pos = [0.0, 0.0, 0.2]
+        pos = [0.0, 0.0, 0.3]
 
         # Face up
         # rot = [-0.717107, 0.0, 0.0, 0.717107]
@@ -87,7 +89,7 @@ class GetupCfg(LeggedRobotCfg):
 
         default_joint_angles = {k: 0.0 for k in Stompy.all_joints()}
 
-        default_positions = Stompy.default_standing()
+        default_positions = Stompy.default_kneeling2()
         for joint in default_positions:
             default_joint_angles[joint] = default_positions[joint]
 
@@ -153,7 +155,7 @@ class GetupCfg(LeggedRobotCfg):
     class commands(LeggedRobotCfg.commands):  # noqa: N801
         # Vers: lin_vel_x, lin_vel_y, ang_vel_yaw, heading (in heading mode ang_vel_yaw is recomputed from heading error)
         num_commands = 4
-        resampling_time = 8.0  # time before command are changed[s]
+        resampling_time = 2.0  # time before command are changed[s]
         heading_command = True  # if true: compute ang vel command from heading error
 
         class ranges:  # noqa: N801
@@ -164,9 +166,10 @@ class GetupCfg(LeggedRobotCfg):
 
     class rewards:  # noqa: N801
         # quite important to keep it right
-        base_height_target = 0.97
+        base_height_target = 1.2
         min_dist = 0.2
         max_dist = 0.5
+        base_target_orientation_euler = [1.92, 0, 0] # [110, 0, 0] degree
         # put some settings here for LLM parameter tuning
         target_joint_pos_scale = 0.17  # rad
         target_feet_height = 0.06  # m
@@ -179,9 +182,10 @@ class GetupCfg(LeggedRobotCfg):
 
         class scales:  # noqa: N801
             # force the model to learn specific position?
-            # joint_pos = 2.
+            joint_pos = 1.
+            orientation = 10.
             # height reward
-            base_height = 1
+            base_height = 10
             # base_acc = 0.2
             # energy
             # action_smoothness = -0.002
